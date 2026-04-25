@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuestionAI — Smart Exam Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+ 
+<!-- ═══════════════════ LOGIN PAGE ═══════════════════ -->
+<div id="loginPage">
+  <div class="login-left">
+    <div class="login-logo">Question<span>AI</span></div>
+    <div class="login-tagline">Smart Exams.<br/><span class="gt">Powered by AI.</span><br/>Built for You.</div>
+    <p class="login-sub">The only platform that auto-generates Bloom's Taxonomy-aligned question papers — for teachers to create, students to attempt.</p>
+    <div class="login-features">
+      <div class="lf-item"><div class="lf-dot"></div>AI generates real questions using Claude API</div>
+      <div class="lf-item"><div class="lf-dot"></div>Students attempt papers with live timer</div>
+      <div class="lf-item"><div class="lf-dot"></div>Auto-grading with detailed results</div>
+      <div class="lf-item"><div class="lf-dot"></div>Built-in AI chatbot for doubt solving</div>
+      <div class="lf-item"><div class="lf-dot"></div>PDF / DOC export for teachers</div>
+    </div>
+  </div>
+ 
+  <div class="login-right">
+    <div class="login-box">
+      <div class="login-tabs">
+        <button class="ltab active" onclick="switchLoginTab('login')">Sign In</button>
+        <button class="ltab" onclick="switchLoginTab('register')">Register</button>
+      </div>
+      <div class="role-select">
+        <button class="role-btn selected" onclick="selectRole('teacher',this)">
+          <span class="role-icon">👨‍🏫</span>Teacher
+        </button>
+        <button class="role-btn" onclick="selectRole('student',this)">
+          <span class="role-icon">🎓</span>Student
+        </button>
+      </div>
+ 
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="lform-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@school.edu" value="teacher@demo.com"/>
+        </div>
+        <div class="lform-group">
+          <label>Password</label>
+          <input type="password" id="loginPass" placeholder="••••••••" value="demo123"/>
+        </div>
+        <div class="login-err" id="loginErr">Invalid credentials. Try demo accounts below.</div>
+        <button class="login-btn" onclick="doLogin()">Sign In →</button>
+        <p class="login-switch">
+          Don't have an account? <a onclick="switchLoginTab('register')">Register here</a><br/><br/>
+          <small style="color:var(--muted)">
+            Demo: teacher@demo.com / demo123<br/>
+            Demo: student@demo.com / demo123
+          </small>
+        </p>
+      </div>
+ 
+      <!-- REGISTER FORM -->
+      <div id="registerForm" class="hidden">
+        <div class="lform-group"><label>Full Name</label><input type="text" id="regName" placeholder="Your full name"/></div>
+        <div class="lform-group"><label>Email Address</label><input type="email" id="regEmail" placeholder="you@school.edu"/></div>
+        <div class="lform-group"><label>Password</label><input type="password" id="regPass" placeholder="Min. 6 characters"/></div>
+        <div class="lform-group" id="regClassGroup">
+          <label>Class / Grade</label>
+          <select id="regClass" style="width:100%;padding:.7rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--font-b);font-size:.9rem;outline:none">
+            <option>Grade 6</option><option>Grade 7</option><option>Grade 8</option>
+            <option selected>Grade 9</option><option>Grade 10</option><option>Grade 11</option>
+            <option>Grade 12</option><option>Undergraduate</option>
+          </select>
+        </div>
+        <div class="login-err" id="regErr"></div>
+        <button class="login-btn" onclick="doRegister()">Create Account →</button>
+        <p class="login-switch">Already have an account? <a onclick="switchLoginTab('login')">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══════════════════ MAIN APP ═══════════════════ -->
+<div id="appShell">
+  <nav class="navbar">
+    <div class="nav-logo">Question<span>AI</span></div>
+    <ul class="nav-links" id="navLinks"></ul>
+    <div class="nav-right">
+      <span class="nav-badge" id="roleBadge"></span>
+      <div class="nav-user" id="navAvatar"></div>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+ 
+  <main>
+ 
+    <!-- ── TEACHER: DASHBOARD ── -->
+    <section class="page" id="page-tdash">
+      <div class="page-header">
+        <h2>Welcome back, <span class="gt2" id="teacherName">Teacher</span> 👋</h2>
+        <p>Here's your teaching overview for today.</p>
+      </div>
+      <div class="dash-stats">
+        <div class="ds-card"><div class="ds-num" id="ts-papers">0</div><div class="ds-label">Papers Generated</div></div>
+        <div class="ds-card"><div class="ds-num" id="ts-students">0</div><div class="ds-label">Students Enrolled</div></div>
+        <div class="ds-card"><div class="ds-num" id="ts-attempts">0</div><div class="ds-label">Attempts Made</div></div>
+        <div class="ds-card"><div class="ds-num" id="ts-avg">0%</div><div class="ds-label">Average Score</div></div>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-card">
+          <h3>Recent Papers</h3>
+          <div id="recentPapers"></div>
+        </div>
+        <div class="dash-card">
+          <h3>Quick Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:.6rem;margin-top:.5rem">
+            <button class="login-btn" style="padding:.7rem" onclick="showPage('tgenerate')">✨ Generate New Paper</button>
+            <button class="nbtn" style="width:100%;padding:.7rem" onclick="showPage('thistory')">📁 View All Papers</button>
+            <button class="nbtn" style="width:100%;padding:.7rem" onclick="showPage('tanalytics')">📊 Analytics</button>
+          </div>
+          <div class="dash-card" style="margin-top:1rem;background:rgba(0,229,255,.04);border-color:rgba(0,229,255,.2)">
+            <div class="ai-tag">🤖 AI Powered</div>
+            <p style="font-size:.85rem;color:var(--muted)">Questions are generated using the Claude AI API — ensuring unique, curriculum-aligned, Bloom's Taxonomy-mapped questions every time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <!-- ── TEACHER: GENERATE PAPER ── -->
+    <section class="page" id="page-tgenerate">
+      <div class="page-header">
+        <h2>Generate Question Paper</h2>
+        <p>AI will generate real questions based on your inputs using Claude API.</p>
+      </div>
+      <div class="gen-layout">
+ 
+        <!-- LEFT: FORM -->
+        <div class="panel">
+ 
+          <!-- Subject & Topic -->
+          <div class="form-sec">
+            <div class="form-sec-title">📚 Subject & Topic</div>
+            <div class="frow">
+              <div class="fg"><label>Subject</label>
+                <select id="g-subject">
+                  <option value="">Select Subject</option>
+                  <option>Mathematics</option><option>Physics</option><option>Chemistry</option>
+                  <option>Biology</option><option>Computer Science</option><option>English</option>
+                  <option>History</option><option>Geography</option><option>Economics</option>
+                </select>
+              </div>
+              <div class="fg"><label>Grade / Class</label>
+                <select id="g-grade">
+                  <option>Grade 9</option><option>Grade 10</option><option>Grade 11</option>
+                  <option>Grade 12</option><option>Undergraduate</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Topic(s) <span style="font-weight:400">(comma-separated)</span></label>
+              <input type="text" id="g-topics" placeholder="e.g. Photosynthesis, Cell Division, Genetics"/>
+            </div>
+            <div class="fg">
+              <label>Syllabus / Context <span style="font-weight:400">(optional but recommended)</span></label>
+              <textarea id="g-syllabus" rows="3" placeholder="Paste chapter summary, learning outcomes, or any relevant content…"></textarea>
+            </div>
+          </div>
+ 
+          <!-- Paper Structure -->
+          <div class="form-sec">
+            <div class="form-sec-title">📝 Paper Structure</div>
+            <div class="frow">
+              <div class="fg"><label>Total Marks</label><input type="number" id="g-marks" value="100" min="20" max="300"/></div>
+              <div class="fg"><label>Duration (mins)</label><input type="number" id="g-duration" value="180" min="30" max="360"/></div>
+            </div>
+            <div class="fg"><label>Question Types</label>
+              <div class="cb-grid">
+                <label class="cb-item"><input type="checkbox" checked id="qt-mcq"/> MCQ</label>
+                <label class="cb-item"><input type="checkbox" checked id="qt-short"/> Short Answer</label>
+                <label class="cb-item"><input type="checkbox" checked id="qt-long"/> Long Answer</label>
+                <label class="cb-item"><input type="checkbox" id="qt-tf"/> True/False</label>
+                <label class="cb-item"><input type="checkbox" id="qt-fill"/> Fill in Blanks</label>
+                <label class="cb-item"><input type="checkbox" id="qt-match"/> Match</label>
+              </div>
+            </div>
+            <div class="fg"><label>Difficulty</label>
+              <input type="range" class="diff-slider" id="g-diff" min="1" max="3" value="2"/>
+              <div class="diff-lbl"><span>Easy</span><span>Medium</span><span>Hard</span></div>
+            </div>
+          </div>
+ 
+          <!-- Bloom's Taxonomy -->
+          <div class="form-sec">
+            <div class="form-sec-title">🧠 Bloom's Taxonomy Distribution</div>
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Set question % for each cognitive level (must total 100%)</p>
+            <div class="bloom-row"><div class="btag br-r">Remember</div><input type="range" class="bloom-range" data-level="remember" min="0" max="60" value="20"/><span class="bloom-pct">20%</span></div>
+            <div class="bloom-row"><div class="btag bu">Understand</div><input type="range" class="bloom-range" data-level="understand" min="0" max="60" value="20"/><span class="bloom-pct">20%</span></div>
+            <div class="bloom-row"><div class="btag ba">Apply</div><input type="range" class="bloom-range" data-level="apply" min="0" max="60" value="20"/><span class="bloom-pct">20%</span></div>
+            <div class="bloom-row"><div class="btag ban">Analyze</div><input type="range" class="bloom-range" data-level="analyze" min="0" max="60" value="15"/><span class="bloom-pct">15%</span></div>
+            <div class="bloom-row"><div class="btag be">Evaluate</div><input type="range" class="bloom-range" data-level="evaluate" min="0" max="60" value="15"/><span class="bloom-pct">15%</span></div>
+            <div class="bloom-row"><div class="btag bc">Create</div><input type="range" class="bloom-range" data-level="create" min="0" max="60" value="10"/><span class="bloom-pct">10%</span></div>
+            <div class="bloom-total">Total: <span id="bloomTot">100</span>% <span id="bwarn" class="bloom-warn hidden">⚠ Must equal 100%</span></div>
+          </div>
+ 
+          <!-- Options -->
+          <div class="form-sec">
+            <div class="form-sec-title">⚙️ Options</div>
+            <div class="toggle-list">
+              <label class="tgl-item"><span>Include Answer Key</span><div class="tgl-sw"><input type="checkbox" id="opt-ans" checked/><span class="tgl-knob"></span></div></label>
+              <label class="tgl-item"><span>Show Bloom's Tags on Questions</span><div class="tgl-sw"><input type="checkbox" id="opt-tags" checked/><span class="tgl-knob"></span></div></label>
+              <label class="tgl-item"><span>Section-wise Paper</span><div class="tgl-sw"><input type="checkbox" id="opt-sec" checked/><span class="tgl-knob"></span></div></label>
+              <label class="tgl-item"><span>Publish to Student Portal</span><div class="tgl-sw"><input type="checkbox" id="opt-publish" checked/><span class="tgl-knob"></span></div></label>
+            </div>
+            <div class="fg" style="margin-top:.85rem">
+              <label>School / Institution</label>
+              <input type="text" id="g-school" placeholder="e.g. St. Xavier's High School"/>
+            </div>
+            <div class="fg">
+              <label>Exam Title</label>
+              <input type="text" id="g-title" placeholder="e.g. Mid-Term Examination 2025" value="Mid-Term Examination 2025"/>
+            </div>
+          </div>
+ 
+          <button class="gen-btn" onclick="generatePaperAI()" id="genBtn">
+            <div class="spin" id="genSpin"></div>
+            <span id="genTxt">✨ Generate with AI</span>
+          </button>
+        </div>
+ 
+        <!-- RIGHT: PREVIEW -->
+        <div class="panel">
+          <div class="prev-header">
+            <h3>Preview</h3>
+            <div class="prev-actions hidden" id="prevActions">
+              <button class="btn-sm" onclick="dlPaper('pdf')">⬇ PDF</button>
+              <button class="btn-sm" onclick="dlPaper('doc')">⬇ DOC</button>
+              <button class="btn-sm" onclick="printPaper()">🖨 Print</button>
+              <button class="btn-sm" onclick="savePaper()">💾 Save</button>
+            </div>
+          </div>
+          <div id="paperPreview" class="prev-empty">
+            <div class="prev-ph">
+              <div class="ph-icon">🤖</div>
+              <p>AI-generated paper will appear here</p>
+              <p style="font-size:.82rem;color:var(--muted);margin-top:.3rem">Fill the form → click Generate with AI</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <!-- ── TEACHER: MY PAPERS (HISTORY) ── -->
+    <section class="page" id="page-thistory">
+      <div class="page-header">
+        <h2>My Question Papers</h2>
+        <p>All generated papers. Reuse, export, or view results.</p>
+      </div>
+      <div class="hist-toolbar">
+        <input class="hist-search" placeholder="🔍 Search by subject, topic, title…" oninput="filterHist()" id="histSearch"/>
+        <select class="hist-filter" onchange="filterHist()" id="histFilt">
+          <option value="">All Subjects</option>
+          <option>Mathematics</option><option>Physics</option><option>Chemistry</option>
+          <option>Biology</option><option>Computer Science</option><option>English</option>
+        </select>
+      </div>
+      <div class="hist-grid" id="histGrid"></div>
+    </section>
+ 
+    <!-- ── TEACHER: ANALYTICS ── -->
+    <section class="page" id="page-tanalytics">
+      <div class="page-header">
+        <h2>Analytics</h2>
+        <p>Bloom's coverage, difficulty distribution and performance trends.</p>
+      </div>
+      <div class="an-grid">
+        <div class="an-card wide">
+          <h3>Bloom's Taxonomy Coverage (Last 5 Papers)</h3>
+          <div class="bar-chart" id="bloomChart"></div>
+        </div>
+        <div class="an-card">
+          <h3>Difficulty Distribution</h3>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="40" fill="#0e1320"/>
+              <circle cx="60" cy="60" r="40" fill="none" stroke="#4ade80" stroke-width="20" stroke-dasharray="75 175" stroke-dashoffset="0"/>
+              <circle cx="60" cy="60" r="40" fill="none" stroke="#f59e0b" stroke-width="20" stroke-dasharray="100 150" stroke-dashoffset="-75"/>
+              <circle cx="60" cy="60" r="40" fill="none" stroke="#f87171" stroke-width="20" stroke-dasharray="75 175" stroke-dashoffset="-175"/>
+            </svg>
+            <div class="dleg">
+              <div><span class="ddot" style="background:#4ade80"></span>Easy 30%</div>
+              <div><span class="ddot" style="background:#f59e0b"></span>Medium 40%</div>
+              <div><span class="ddot" style="background:#f87171"></span>Hard 30%</div>
+            </div>
+          </div>
+        </div>
+        <div class="an-card">
+          <h3>Papers / Month</h3>
+          <div class="line-chart" id="lineChart"></div>
+        </div>
+        <div class="an-card">
+          <h3>Subject Breakdown</h3>
+          <div class="sb-list" id="sbList"></div>
+        </div>
+        <div class="an-card">
+          <h3>Quick Stats</h3>
+          <div class="qs-grid">
+            <div class="qs-card"><span class="qs-val">47</span><span class="qs-lbl">Total Papers</span></div>
+            <div class="qs-card"><span class="qs-val">1,128</span><span class="qs-lbl">Questions Made</span></div>
+            <div class="qs-card"><span class="qs-val">6.2 hrs</span><span class="qs-lbl">Time Saved</span></div>
+            <div class="qs-card"><span class="qs-val">98%</span><span class="qs-lbl">Taxonomy Cover</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <!-- ── TEACHER: ABOUT ── -->
+    <section class="page" id="page-tabout">
+      <div class="ab-hero">
+        <h2>About <span class="gt2">QuestionAI</span></h2>
+        <p>AI-powered exam platform for generating Bloom's Taxonomy-aligned question papers — built for teachers and students.</p>
+      </div>
+      <div class="ab-grid">
+        <div class="ab-card"><h3>The Problem</h3><p>Preparing balanced and quality question papers is a time-consuming, repetitive task for teachers. Most papers fail to cover all 6 levels of Bloom's Taxonomy, leading to poor assessment of student learning outcomes.</p></div>
+        <div class="ab-card"><h3>Our Solution</h3><p>An AI-powered web application where teachers input syllabus topics, question types, difficulty, and marks distribution. Claude AI generates questions mapped to Bloom's levels. Students attempt papers online with live timers and get instant results.</p></div>
+        <div class="ab-card">
+          <h3>Tech Stack</h3>
+          <div class="tech-tags">
+            <span class="ttech">Python</span><span class="ttech">Machine Learning</span><span class="ttech">NLP</span>
+            <span class="ttech">Claude AI / LLM</span><span class="ttech">Flask / Django</span>
+            <span class="ttech">HTML</span><span class="ttech">CSS</span><span class="ttech">JavaScript</span>
+            <span class="ttech">MySQL / MongoDB</span>
+          </div>
+        </div>
+        <div class="ab-card">
+          <h3>Bloom's Taxonomy Levels</h3>
+          <div class="bl-list">
+            <div class="bl-item bl1"><strong>1. Remember</strong> — Recall facts and basic concepts</div>
+            <div class="bl-item bl2"><strong>2. Understand</strong> — Explain ideas or concepts</div>
+            <div class="bl-item bl3"><strong>3. Apply</strong> — Use knowledge in new situations</div>
+            <div class="bl-item bl4"><strong>4. Analyze</strong> — Draw connections, examine parts</div>
+            <div class="bl-item bl5"><strong>5. Evaluate</strong> — Justify a decision or argument</div>
+            <div class="bl-item bl6"><strong>6. Create</strong> — Produce new or original work</div>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <!-- ── STUDENT: DASHBOARD ── -->
+    <section class="page" id="page-sdash">
+      <div class="stu-hero">
+        <div class="stu-hero-text">
+          <h2>Hello, <span class="gt2" id="studentName">Student</span>! 👋</h2>
+          <p>Ready to attempt your assigned papers? Your results are tracked automatically.</p>
+        </div>
+        <div style="font-size:3rem">🎓</div>
+      </div>
+      <div class="stu-stats">
+        <div class="ds-card"><div class="ds-num" id="ss-assigned">0</div><div class="ds-label">Papers Assigned</div></div>
+        <div class="ds-card"><div class="ds-num" id="ss-done">0</div><div class="ds-label">Completed</div></div>
+        <div class="ds-card"><div class="ds-num" id="ss-avg">—</div><div class="ds-label">Average Score</div></div>
+        <div class="ds-card"><div class="ds-num" id="ss-best">—</div><div class="ds-label">Best Score</div></div>
+      </div>
+      <div class="page-header" style="margin-bottom:1rem"><h2 style="font-size:1.3rem">Available Papers</h2></div>
+      <div class="papers-grid" id="studentPapers"></div>
+    </section>
+ 
+    <!-- ── STUDENT: RESULTS ── -->
+    <section class="page" id="page-sresults">
+      <div class="page-header">
+        <h2>My Results</h2>
+        <p>All your attempted papers and performance records.</p>
+      </div>
+      <div id="studentResults"></div>
+    </section>
+ 
+  </main>
+</div>
+ 
+<!-- ═══════════════════ EXAM MODAL ═══════════════════ -->
+<div class="modal-overlay" id="examModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="examModalTitle">Exam</h3>
+      <div class="modal-timer" id="examTimer">00:00</div>
+    </div>
+    <div class="modal-body" id="examModalBody"></div>
+    <div class="modal-foot">
+      <div class="nav-btns">
+        <button class="nbtn" onclick="examNav(-1)">← Prev</button>
+        <button class="nbtn" onclick="examNav(1)">Next →</button>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <span id="examQCounter" style="font-size:.82rem;color:var(--muted);align-self:center"></span>
+        <button class="nbtn submit-btn" onclick="submitExam()">Submit Exam ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══════════════════ CHATBOT ═══════════════════ -->
+<button class="chat-fab" onclick="toggleChat()" id="chatFab">
+  🤖
+  <div class="chat-notif" id="chatNotif">1</div>
+</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <div class="chat-head-info">
+      <div class="chat-avatar">🤖</div>
+      <div>
+        <div class="chat-name">QuestionAI Assistant</div>
+        <div class="chat-status">Online — powered by Claude AI</div>
+      </div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="chat-suggestions" id="chatSuggestions">
+    <button class="sug-btn" onclick="sendSug(this)">How does Bloom's Taxonomy work?</button>
+    <button class="sug-btn" onclick="sendSug(this)">Explain photosynthesis</button>
+    <button class="sug-btn" onclick="sendSug(this)">Tips for exam prep</button>
+    <button class="sug-btn" onclick="sendSug(this)">What is Newton's 2nd law?</button>
+  </div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask me anything…" onkeydown="chatKey(event)"></textarea>
+    <button class="chat-send" onclick="sendChat()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+ 
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast"></div>
+ 
+<!-- SCRIPTS -->
+<script src="script.js"></script>
+</body>
+</html>
